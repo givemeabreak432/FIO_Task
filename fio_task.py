@@ -33,6 +33,28 @@ class Reagent:
 		reagent.saveReagent()
 		return True
 
+	#delete reagent from list and document
+	#returns false if unable to delete
+	@staticmethod
+	def deleteReagent(reagent):
+		try:
+			Reagent.reagentList.remove(reagent)
+		except:
+			return False
+
+		f = open(Reagent.reagentFile, "r")	
+		doc = ""	
+		for line in f.read().split("\n"):
+			s = line.split(';')
+			if reagent.name != s[0]:
+				doc = doc + line + "\n"
+		f.close()
+		f = open(Reagent.reagentFile, "w");
+		f.write(doc)
+		f.close()
+
+		
+
 	#startup static method. Reads in reagent file and starts reagentList
 	@staticmethod
 	def startup():
@@ -153,7 +175,7 @@ def drawReagentSelector(message = ""):
 #pass a reagent, displays information about reagent. 
 def drawReagentProperties(reagent, message = ""):
 	layout = [[ui.Text(reagent.toText())],
-			 [ui.Button("View List"), ui.Button("Update Reagent")]]
+			 [ui.Button("View List"), ui.Button("Update Reagent"), ui.Button("Delete Reagent")]]
 
 	window = ui.Window(reagent.name, layout)
 
@@ -167,6 +189,12 @@ def drawReagentUpdate(reagent, message = ""):
 	            [ui.Button('Save Property'), ui.Button('Close'), ui.Button('View Reagent')]]
 	window = ui.Window(reagent.name, layout)
 
+	windowManager(window, reagent)
+
+def drawConfirmDelete(reagent):
+	layout = [ [ui.Text("Are you sure you want to delete " + reagent.name)],
+				[ui.Button("Yes"), ui.Button("No")]]
+	window = ui.Window(reagent.name, layout)
 	windowManager(window, reagent)
 
 #detects button presses from current window
@@ -200,11 +228,26 @@ def windowManager(window, reagent = ""):
 		    	drawReagentProperties(reagent)
 		    	break
 
-
 	    if event in (None, "Update Reagent"):
 	    	window.close()
 	    	drawReagentUpdate(reagent)
 	    	break
+
+	    if event in (None, "Delete Reagent"):
+	    	window.close()
+	    	drawConfirmDelete(reagent)
+	    	break
+	    if event in (None, "Yes"):
+	    	window.close()
+	    	Reagent.deleteReagent(reagent)
+	    	drawReagentSelector()
+	    	break
+
+	    if event in (None, "No"):
+	    	window.close()
+	    	drawReagentProperties(reagent)
+	    	break
+
 
 	    #Check for valid quantity. 
 	    #saves and timestamps new reagents
