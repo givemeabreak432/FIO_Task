@@ -15,9 +15,11 @@ class Reagent:
 		self.amount = amount
 		self.unit = unit
 		self.timestamp = timestamp
+		self.additionalProperties = []
 
 
 	#create new instance of reagent to save to list
+	#TODO clean string
 	@staticmethod
 	def newReagent(name, amount, unit, timestamp):
 		reagent = Reagent(name, amount, unit, timestamp)
@@ -27,6 +29,7 @@ class Reagent:
 		reagent.saveReagent()
 
 	#startup static method. Reads in reagent file and starts reagentList
+	#TODO additionalProperties storage
 	@staticmethod
 	def startup():
 		try:
@@ -55,9 +58,19 @@ class Reagent:
 		f = open(Reagent.reagentFile, "a")
 		f.write(self.name + ";" + self.amount + ";" + self.unit + ";" + self.timestamp + "\n")
 		f.close()
+	#append reagent
+	def appendReagent(self):
+		pass
 
 	def toText(self):
 		return self.name + ": " + self.amount + self.unit + " | " + self.timestamp
+
+	#TODO save add additionalProperties to document. 
+	def addProperty(key, value):
+		self.additionalProperties.append[[key, value]]
+
+	def addProperty(list):
+		self.additionalProperties.append[list[0:1]]
 
 def main():
 	Reagent.startup()

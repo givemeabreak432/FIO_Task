@@ -7,6 +7,7 @@ Reagent:
   variables:
     reagentList: list of current instances of reagent
     reagentFile: directory for reagent list
+    additionalProperties: additional data stored in 2 dimensional list for each element.
   functions:
     __init__: constructor for reagent class. Reagents can also carry additional data stored in list.
     newReagent: static method that creates new instance of reagent class by calling constructor and calls saveReagent
@@ -16,6 +17,7 @@ Reagent:
     saveReagent: Saves new reagent to text document. 
     appendReagent: appends additional data for already defined reagent. 
     toText: to string method, returns all pre-defined data. Does not return additional stored data
+    addProperty: add a new additional property. Overloaded to allow a key and value, or a list of length 2.
 Windows:
   Input menu - default menu. This menu is for accepting new reagents, does not define their additional properties
   Reagent Selector - list of currently saved reagents. Can select a reagent to view properties
