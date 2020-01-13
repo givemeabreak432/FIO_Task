@@ -21,8 +21,9 @@ class Reagent:
 	#TODO add duplicate reagent name
 	@staticmethod
 	def newReagent(name, quantity, timestamp):
+		name = name[0:25].replace(";","").replace("\\", "")
 		reagent = Reagent(name, quantity, timestamp)
-		Reagent.reagentList.append(reagent)
+		Reagent.reagentList.append(reagent)	
 
 		#append reagent to end of file list
 		reagent.saveReagent()
@@ -72,6 +73,9 @@ class Reagent:
 	#adds custom property to reagent, appends it to document
 	def addProperty(self, key, value):
 		self.additionalProperties.append([key, value])
+
+		key = key[0:25].replace(";","").replace("\\", "")
+		value = value[0:25].replace(";","").replace("\\", "")
 
 		f = open(Reagent.reagentFile, "r")
 		doc = ""
@@ -148,7 +152,7 @@ def drawReagentProperties(reagent, message = ""):
 
 	windowManager(window, reagent)
 
-#update fields for amending reagent data
+#update fields for adding new properties to reagent
 def drawReagentUpdate(reagent, message = ""):
 	layout = [  [ui.Text(message)],
 				[ui.Text("Enter Property Name", size = (20, 1)), ui.InputText()],
@@ -213,11 +217,12 @@ def windowManager(window, reagent = ""):
 		    	break
 		#Saves additional property to reagent object
 		#redraw window to clear inputs
+		#property does not need to be a digit
+		#TODO if property is digit, add unit and store as quantity
 	    if event in (None, "Save Property"):
-	    	if values[1].isdigit():
-	    		window.close()
-	    		reagent.addProperty(values[0], values[1])
-	    		drawReagentUpdate(reagent, "Property Added!")
+    		window.close()
+    		reagent.addProperty(values[0], values[1])
+    		drawReagentUpdate(reagent, "Property Added!")
 
 if __name__ == "__main__":
 	Reagent.startup()
