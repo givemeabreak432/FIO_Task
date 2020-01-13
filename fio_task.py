@@ -19,14 +19,19 @@ class Reagent:
 	#create new instance of reagent to save to list
 	#TODO clean string (remove delimiters, escape sequences, length)
 	#TODO add duplicate reagent name
+	#returns false/true depending on if reagent was saved
 	@staticmethod
 	def newReagent(name, quantity, timestamp):
 		name = name[0:25].replace(";","").replace("\\", "")
+		if isinstance(Reagent.searchByName(name), Reagent):
+			return False
+
 		reagent = Reagent(name, quantity, timestamp)
 		Reagent.reagentList.append(reagent)	
 
 		#append reagent to end of file list
 		reagent.saveReagent()
+		return True
 
 	#startup static method. Reads in reagent file and starts reagentList
 	@staticmethod
@@ -50,11 +55,13 @@ class Reagent:
 
 	#returns matchingReagents from reagentList
 	#TODO handle duplicate names
+	#returns False if no reagents found
 	@staticmethod
 	def searchByName(name):
 		for each in Reagent.reagentList:
 			if each.name == name:
 				return each
+		return False
 
 
 	#saves reagent to text document with no additional properties. 
@@ -204,7 +211,10 @@ def windowManager(window, reagent = ""):
 	    #redraws window to clear inputs
 	    if event in (None, "Save Reagent"):
 		    if values[1].isdigit():
-		    	Reagent.newReagent(values[0], Quantity(values[1], "NA"), datetime.now().strftime(timeFormat))
+		    	if not Reagent.newReagent(values[0], Quantity(values[1], "NA"), datetime.now().strftime(timeFormat)):
+		    		window.close()
+		    		drawInput("A Reagent with that name already exists")
+		    		break
 		    	text = values[0] + " saved!"
 		    	window.close()
 		    	drawInput(text)
