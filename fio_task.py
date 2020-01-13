@@ -1,7 +1,6 @@
 import PySimpleGUI as ui
 from datetime import datetime
 
-units = ["uL", "x", "mM", "nM", "mg/mL", "U/uL", "U/uL"] #TODO make into seperate file to allow for more units/custom units
 timeFormat = "%m/%d/%Y, %H:%M:%S"
 
 #TODO make reagents more modulable for data
@@ -10,19 +9,18 @@ class Reagent:
 	reagentList = []
 	reagentFile = "reagents.txt"
 
-	def __init__(self, name, amount, unit, timestamp):
+	def __init__(self, name,  quantity, timestamp):
 		self.name = name
-		self.amount = amount
-		self.unit = unit
+		self.quantity = quantity
 		self.timestamp = timestamp
 		self.additionalProperties = []
 
 
 	#create new instance of reagent to save to list
-	#TODO clean string
+	#TODO clean string (remove delimiters)
 	@staticmethod
-	def newReagent(name, amount, unit, timestamp):
-		reagent = Reagent(name, amount, unit, timestamp)
+	def newReagent(name, quantity, timestamp):
+		reagent = Reagent(name, quantity, timestamp)
 		Reagent.reagentList.append(reagent)
 
 		#append reagent to end of file list
@@ -42,7 +40,7 @@ class Reagent:
 		for line in f.read().split("\n"):
 			s = line.split(";");
 			if len(s) > 1:
-				Reagent.reagentList.append(Reagent(s[0], s[1], s[2], s[3]))
+				Reagent.reagentList.append(Reagent(s[0], Quantity(s[1], s[2]), s[3]))
 
 	#returns matchingReagents from reagentList
 	#TODO handle duplicate names
@@ -56,14 +54,14 @@ class Reagent:
 	#saves reagent to text document
 	def saveReagent(self):
 		f = open(Reagent.reagentFile, "a")
-		f.write(self.name + ";" + self.amount + ";" + self.unit + ";" + self.timestamp + "\n")
+		f.write(self.name + ";" + self.quantity.amount + ";" + self.quantity.unit + ";" + self.timestamp + "\n")
 		f.close()
 	#append reagent
 	def appendReagent(self):
 		pass
 
 	def toText(self):
-		return self.name + ": " + self.amount + self.unit + " | " + self.timestamp
+		return "Reagent: " + self.name + "\nQuantity: " + self.quantity.amount + " " + self.quantity.unit + "\nAdded: " + self.timestamp
 
 	#TODO save add additionalProperties to document. 
 	def addProperty(key, value):
@@ -71,6 +69,31 @@ class Reagent:
 
 	def addProperty(list):
 		self.additionalProperties.append[list[0:1]]
+
+#Quantity class for handling units. 
+#Quantity is an amount paired with unit
+#TODO: unit is currently a string rather than instance of Unit
+class Quantity:
+	def __init__(self, amount, unit):
+		self.amount = amount
+		self.unit = unit
+
+#TODO
+#UNIT class
+#measurement = what unit is measuring
+#m = ratio of unit vs predefined base unit
+#b = offset from base unit
+#m = 1, b = 0 defines *base unit*.
+#example: farenheit m = 1.8, b = 40 while celsius has m = 1, b = 0
+class Unit:
+	units = ["uL", "x", "mM", "nM", "mg/mL", "U/uL", "U/uL"] 
+	def __init__(self, name, measurement, m, b ):
+		self.name = name
+		self.measurement = measurement
+		self.m = m
+		self.b = b
+
+
 
 def main():
 	Reagent.startup()
@@ -84,7 +107,7 @@ def main():
 def drawInput(message = ""):
 	layout = [  [ui.Text(message)],
 				[ui.Text("Enter Reagent Name", size = (20, 1)), ui.InputText()],
-				[ui.Text("Enter Amount", size=(20, 1)), ui.InputText(), ui.InputCombo(units)],
+				[ui.Text("Enter Amount", size=(20, 1)), ui.InputText(), ui.InputCombo(Unit.units)],
 	            [ui.Button('Save Reagent'), ui.Button('Close'), ui.Button('View List')]]
 
 	window = ui.Window('Reagent', layout)
@@ -92,7 +115,6 @@ def drawInput(message = ""):
 	windowManager(window)
 
 #Window to view reagents
-#TODO make reagents selectable and add make new window based on selected reagent.
 #TODO multiple reagents selectable at once. Seperate windows? Tables?
 def drawReagentSelector(message = ""):
 	#add reagent to list with index for selection
