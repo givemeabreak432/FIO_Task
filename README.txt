@@ -42,5 +42,6 @@ windowManager: This function is called by all draw functions. Responsible for ev
 TODO:
 Clean display for additional properties
 duplicate name handling
+delete reagent or additional property
 reagent interactions list (new txt doc?) - 2 d array [[reg 1, reg 2], [result 1, result 2, ...]]
 expand Unit class - create base units, expand custom units. 

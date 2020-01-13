@@ -64,20 +64,26 @@ class Reagent:
 
 
 	def toText(self):
-		return "Reagent: " + self.name + "\nQuantity: " + self.quantity.amount + " " + self.quantity.unit + "\nAdded: " + self.timestamp
+		outText = "Reagent: " + self.name + "\nQuantity: " + self.quantity.amount + " " + self.quantity.unit + "\nAdded: " + self.timestamp + "\n"
+		for each in self.additionalProperties:
+			outText = outText + each[0] + " " + each[1] + "\n"
+		return outText
 
 	#adds custom property to reagent, appends it to document
-	def addProperty(key, value):
-		self.additionalProperties.append[[key, value]]
+	def addProperty(self, key, value):
+		self.additionalProperties.append([key, value])
 
-		f = open(Reagent.reagentFile, "w+")
+		f = open(Reagent.reagentFile, "r")
 		doc = ""
 		for line in f.read().split("\n"):
 			s = line.split(";");
 			if s[0] == self.name:
 				line = line + ";" + key + ";" + value
-			doc = doc + line
+			doc = doc + line + "\n"
+		f.close()
+		f = open(Reagent.reagentFile, "w")
 		f.write(doc)
+		f.close()
 
 
 #Quantity class for handling units. 
@@ -172,6 +178,7 @@ def windowManager(window, reagent = ""):
 	    	drawInput()
 	    	break
 
+
 	    #Calls drawReagentProperties based on selected reagent.
 	    #if no selected reagent, checks if there is previously selected reagent and draws that
 	    if event in (None, "View Reagent"):
@@ -188,19 +195,29 @@ def windowManager(window, reagent = ""):
 	    	drawReagentUpdate(reagent)
 	    	break
 
-	    #Amount entered is valid
+	    #Check for valid quantity. 
 	    #saves and timestamps new reagents
+	    #redraws window to clear inputs
 	    if event in (None, "Save Reagent"):
 		    if values[1].isdigit():
 		    	Reagent.newReagent(values[0], Quantity(values[1], "NA"), datetime.now().strftime(timeFormat))
 		    	text = values[0] + " saved!"
 		    	window.close()
 		    	drawInput(text)
+		    	break
 
 		    #Amount entered is invalid
 		    else:
 		    	window.close()
 		    	drawInput("Entered amount must be a number")
+		    	break
+		#Saves additional property to reagent object
+		#redraw window to clear inputs
+	    if event in (None, "Save Property"):
+	    	if values[1].isdigit():
+	    		window.close()
+	    		reagent.addProperty(values[0], values[1])
+	    		drawReagentUpdate(reagent, "Property Added!")
 
 if __name__ == "__main__":
 	Reagent.startup()
