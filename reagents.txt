@@ -1,5 +1,5 @@
-
-a;1;NA;01/13/2020, 14:30:50
-b;2;NA;01/13/2020, 14:30:52
+a;1;NA;01/13/2020, 14:30:50;dosage;10;uL;perscription;no;Chemical X;3;x
+b;2;NA;01/13/2020, 14:30:52;side effect;drowsiness;dosage;10;uL;concentration;10;uL
 d;4;NA;01/13/2020, 14:30:56
-
+e;1;N/A;01/13/2020, 14:55:51;dosage;10;uL;side effect;headeaches
+fd;23;nM;01/13/2020, 14:56:08

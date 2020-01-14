@@ -23,7 +23,7 @@ class Reagent:
 	@staticmethod
 	def newReagent(name, quantity, timestamp):
 		name = name[0:25].replace(";","").replace("\\", "")
-		if isinstance(Reagent.searchByName(name), Reagent):
+		if isinstance(Reagent.searchByName(name), Reagent) or name == "":
 			return False
 
 		reagent = Reagent(name, quantity, timestamp)
@@ -53,7 +53,7 @@ class Reagent:
 		f.write(doc)
 		f.close()
 
-		
+		return True
 
 	#startup static method. Reads in reagent file and starts reagentList
 	@staticmethod
@@ -70,8 +70,17 @@ class Reagent:
 			if len(s) > 1:
 				additionalProperties = []
 				if len(s) > 4: #add additional properties if they exist
-					for i in range(4, len(s), 2):
-						additionalProperties.append([s[i], s[i+1]])
+					i = 4
+					while(True):
+						try:
+							if(s[i+1].isdigit()):
+								additionalProperties.append([s[i], Quantity(s[i+1], s[i+2])])
+								i = i + 3
+							else:
+								additionalProperties.append([s[i], s[i+1]])
+								i = i + 2
+						except:
+							break
 
 				Reagent.reagentList.append(Reagent(s[0], Quantity(s[1], s[2]), s[3], additionalProperties))
 
@@ -95,28 +104,41 @@ class Reagent:
 
 	def toText(self):
 		outText = "Reagent: " + self.name + "\nQuantity: " + self.quantity.amount + " " + self.quantity.unit + "\nAdded: " + self.timestamp + "\n"
-		for each in self.additionalProperties:
-			outText = outText + each[0] + " " + each[1] + "\n"
+		for each in self.additionalProperties: 
+			if(isinstance(each[1], Quantity)): #check if AdditionalProperty is a quantity
+				outText = outText + each[0] + " " + each[1].toText() + "\n"
+			else:
+				outText = outText + each[0] + " " + each[1] + "\n"
 		return outText
 
 	#adds custom property to reagent, appends it to document
-	def addProperty(self, key, value):
-		self.additionalProperties.append([key, value])
-
+	def addProperty(self, key, value, unit):
 		key = key[0:25].replace(";","").replace("\\", "")
 		value = value[0:25].replace(";","").replace("\\", "")
+
+		if(key == "" or value == ""):
+			return False
+
+		if(value.isdigit()):
+			value = Quantity(value, unit)
+		self.additionalProperties.append([key, value])
 
 		f = open(Reagent.reagentFile, "r")
 		doc = ""
 		for line in f.read().split("\n"):
 			s = line.split(";");
 			if s[0] == self.name:
-				line = line + ";" + key + ";" + value
+				if(isinstance(value, Quantity)):
+					line = line + ";" + key + ";" + value.amount + ";" + value.unit
+				else:
+					line = line + ";" + key + ";" + value
 			doc = doc + line + "\n"
 		f.close()
 		f = open(Reagent.reagentFile, "w")
 		f.write(doc)
 		f.close()
+
+		return True
 
 
 #Quantity class for handling units. 
@@ -126,6 +148,8 @@ class Quantity:
 	def __init__(self, amount, unit):
 		self.amount = amount
 		self.unit = unit
+	def toText(self):
+		return self.amount + " " + self.unit
 
 #TODO
 #UNIT class
@@ -135,7 +159,7 @@ class Quantity:
 #m = 1, b = 0 defines *base unit*.
 #example: farenheit m = 1.8, b = 40 while celsius has m = 1, b = 0
 class Unit:
-	units = ["uL", "x", "mM", "nM", "mg/mL", "U/uL", "U/uL"] 
+	units = ["N/A", "uL", "x", "mM", "nM", "mg/mL", "U/uL", "U/uL"] 
 	def __init__(self, name, measurement, m, b ):
 		self.name = name
 		self.measurement = measurement
@@ -149,7 +173,7 @@ class Unit:
 def drawInput(message = ""):
 	layout = [  [ui.Text(message)],
 				[ui.Text("Enter Reagent Name", size = (20, 1)), ui.InputText()],
-				[ui.Text("Enter Amount", size=(20, 1)), ui.InputText(), ui.InputCombo(Unit.units)],
+				[ui.Text("Enter Amount", size=(20, 1)), ui.InputText(), ui.InputCombo(Unit.units, default_value = Unit.units[0])],
 	            [ui.Button('Save Reagent'), ui.Button('Close'), ui.Button('View List')]]
 
 	window = ui.Window('Reagent', layout)
@@ -185,7 +209,7 @@ def drawReagentProperties(reagent, message = ""):
 def drawReagentUpdate(reagent, message = ""):
 	layout = [  [ui.Text(message)],
 				[ui.Text("Enter Property Name", size = (20, 1)), ui.InputText()],
-				[ui.Text("Enter Value", size=(20, 1)), ui.InputText(), ui.InputCombo(Unit.units)],
+				[ui.Text("Enter Value", size=(20, 1)), ui.InputText(), ui.InputCombo(Unit.units, default_value=Unit.units[0])],
 	            [ui.Button('Save Property'), ui.Button('Close'), ui.Button('View Reagent')]]
 	window = ui.Window(reagent.name, layout)
 
@@ -203,6 +227,7 @@ def windowManager(window, reagent = ""):
 
 		#Event Selector
 	    event, values = window.read()
+
 	    if event in (None, "Close"):
 	        window.close()
 	        break
@@ -254,7 +279,7 @@ def windowManager(window, reagent = ""):
 	    #redraws window to clear inputs
 	    if event in (None, "Save Reagent"):
 		    if values[1].isdigit():
-		    	if not Reagent.newReagent(values[0], Quantity(values[1], "NA"), datetime.now().strftime(timeFormat)):
+		    	if not Reagent.newReagent(values[0], Quantity(values[1], values[2]), datetime.now().strftime(timeFormat)):
 		    		window.close()
 		    		drawInput("A Reagent with that name already exists")
 		    		break
@@ -268,14 +293,17 @@ def windowManager(window, reagent = ""):
 		    	window.close()
 		    	drawInput("Entered amount must be a number")
 		    	break
+
 		#Saves additional property to reagent object
 		#redraw window to clear inputs
 		#property does not need to be a digit
 		#TODO if property is digit, add unit and store as quantity
 	    if event in (None, "Save Property"):
     		window.close()
-    		reagent.addProperty(values[0], values[1])
-    		drawReagentUpdate(reagent, "Property Added!")
+    		if reagent.addProperty(values[0], values[1], values[2]):
+    			drawReagentUpdate(reagent, "Property Added!")
+    		else:
+    			drawReagentUpdate(reagent, "Do not leave any field blank")
 
 if __name__ == "__main__":
 	Reagent.startup()
