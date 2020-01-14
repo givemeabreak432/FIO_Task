@@ -3,8 +3,7 @@ from datetime import datetime
 
 timeFormat = "%m/%d/%Y, %H:%M:%S"
 
-#TODO make reagents more modulable for data
-#TODO handle duplicate reagent names. 
+
 class Reagent:
 	reagentList = []
 	reagentFile = "reagents.txt"
@@ -17,8 +16,6 @@ class Reagent:
 
 
 	#create new instance of reagent to save to list
-	#TODO clean string (remove delimiters, escape sequences, length)
-	#TODO add duplicate reagent name
 	#returns false/true depending on if reagent was saved
 	@staticmethod
 	def newReagent(name, quantity, timestamp):
@@ -26,7 +23,7 @@ class Reagent:
 		if isinstance(Reagent.searchByName(name), Reagent) or name == "":
 			return False
 
-		reagent = Reagent(name, quantity, timestamp)
+		reagent = Reagent(name, quantity, timestamp, [])
 		Reagent.reagentList.append(reagent)	
 
 		#append reagent to end of file list
@@ -68,24 +65,23 @@ class Reagent:
 		for line in f.read().split("\n"):
 			s = line.split(";");
 			if len(s) > 1:
-				additionalProperties = []
+				properties = []
 				if len(s) > 4: #add additional properties if they exist
 					i = 4
 					while(True):
 						try:
 							if(s[i+1].isdigit()):
-								additionalProperties.append([s[i], Quantity(s[i+1], s[i+2])])
+								properties.append([s[i], Quantity(s[i+1], s[i+2])])
 								i = i + 3
 							else:
-								additionalProperties.append([s[i], s[i+1]])
+								properties.append([s[i], s[i+1]])
 								i = i + 2
 						except:
 							break
 
-				Reagent.reagentList.append(Reagent(s[0], Quantity(s[1], s[2]), s[3], additionalProperties))
+				Reagent.reagentList.append(Reagent(s[0], Quantity(s[1], s[2]), s[3], properties))
 
 	#returns matchingReagents from reagentList
-	#TODO handle duplicate names
 	#returns False if no reagents found
 	@staticmethod
 	def searchByName(name):
@@ -95,12 +91,11 @@ class Reagent:
 		return False
 
 
-	#saves reagent to text document with no additional properties. 
+	#appends new reagent to end of text file
 	def saveReagent(self):
 		f = open(Reagent.reagentFile, "a")
 		f.write(self.name + ";" + self.quantity.amount + ";" + self.quantity.unit + ";" + self.timestamp + "\n")
 		f.close()
-
 
 	def toText(self):
 		outText = "Reagent: " + self.name + "\nQuantity: " + self.quantity.amount + " " + self.quantity.unit + "\nAdded: " + self.timestamp + "\n"
@@ -132,7 +127,8 @@ class Reagent:
 					line = line + ";" + key + ";" + value.amount + ";" + value.unit
 				else:
 					line = line + ";" + key + ";" + value
-			doc = doc + line + "\n"
+			if(len(line) != 0): #prevents erroneous whitespace in txt doc
+				doc = doc + line + "\n"
 		f.close()
 		f = open(Reagent.reagentFile, "w")
 		f.write(doc)
@@ -173,7 +169,7 @@ class Unit:
 def drawInput(message = ""):
 	layout = [  [ui.Text(message)],
 				[ui.Text("Enter Reagent Name", size = (20, 1)), ui.InputText()],
-				[ui.Text("Enter Amount", size=(20, 1)), ui.InputText(), ui.InputCombo(Unit.units, default_value = Unit.units[0])],
+				[ui.Text("Enter Amount", size=(20, 1)), ui.InputText(), ui.InputCombo(Unit.units, readonly=True, default_value = Unit.units[0])],
 	            [ui.Button('Save Reagent'), ui.Button('Close'), ui.Button('View List')]]
 
 	window = ui.Window('Reagent', layout)
@@ -209,7 +205,7 @@ def drawReagentProperties(reagent, message = ""):
 def drawReagentUpdate(reagent, message = ""):
 	layout = [  [ui.Text(message)],
 				[ui.Text("Enter Property Name", size = (20, 1)), ui.InputText()],
-				[ui.Text("Enter Value", size=(20, 1)), ui.InputText(), ui.InputCombo(Unit.units, default_value=Unit.units[0])],
+				[ui.Text("Enter Value", size=(20, 1)), ui.InputText(), ui.InputCombo(Unit.units, readonly=True, default_value=Unit.units[0])],
 	            [ui.Button('Save Property'), ui.Button('Close'), ui.Button('View Reagent')]]
 	window = ui.Window(reagent.name, layout)
 
@@ -297,7 +293,6 @@ def windowManager(window, reagent = ""):
 		#Saves additional property to reagent object
 		#redraw window to clear inputs
 		#property does not need to be a digit
-		#TODO if property is digit, add unit and store as quantity
 	    if event in (None, "Save Property"):
     		window.close()
     		if reagent.addProperty(values[0], values[1], values[2]):

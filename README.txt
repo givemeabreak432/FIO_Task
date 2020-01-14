@@ -39,8 +39,6 @@ draw:
 windowManager: This function is called by all draw functions. Responsible for event checking and calling draw functions
 
 TODO:
-duplicate name handling
-delete reagent or additional property
-add units to additional property
+modify saveReagent method to improve readability. Use it to both save new reagents to file, or modify existing reagent
 reagent interactions list (new txt doc?) - 2 d array [[reg 1, reg 2], [result 1, result 2, ...]]
 expand Unit class - create base units, expand custom units. 
